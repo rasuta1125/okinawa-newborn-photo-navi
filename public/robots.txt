@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://okinawa-newborn-navi.com/sitemap.xml
+
+# Disallow admin pages
+User-agent: *
+Disallow: /admin/
+Disallow: /api/

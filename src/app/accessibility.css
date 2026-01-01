@@ -1,0 +1,74 @@
+/* フォーカス表示の強化 */
+*:focus {
+    outline: 2px solid var(--photorait-orange);
+    outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--photorait-orange);
+    outline-offset: 2px;
+}
+
+/* スクリーンリーダー専用クラス */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+    :root {
+        --primary: #000000;
+        --primary-light: #333333;
+        --accent: #FF6600;
+        --accent-dark: #CC5200;
+    }
+}
+
+/* アニメーション削減設定 */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* タッチターゲットサイズ最適化 */
+@media (pointer: coarse) {
+
+    button,
+    a,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
