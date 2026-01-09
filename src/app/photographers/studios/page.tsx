@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getStudios, getAllAreas, getAllOptions } from '@/lib/services/photographerService';
 import { PhotographerCard } from '@/components/PhotographerCard';
+import { Pagination } from '@/components/Pagination';
 import { Photographer } from '@/lib/types';
 
 export default function StudiosPage() {
@@ -12,6 +13,9 @@ export default function StudiosPage() {
     const [areas, setAreas] = useState<string[]>([]);
     const [options, setOptions] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const ITEMS_PER_PAGE = 10;
 
     useEffect(() => {
         const loadData = async () => {
@@ -39,6 +43,17 @@ export default function StudiosPage() {
         if (selectedOptions.length > 0 && !selectedOptions.some(opt => p.options?.includes(opt))) return false;
         return true;
     });
+
+    // ページネーション計算
+    const totalPages = Math.ceil(filteredPhotographers.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const currentPhotographers = filteredPhotographers.slice(startIndex, endIndex);
+
+    // フィルター変更時にページをリセット
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedArea, selectedOptions]);
 
     const toggleOption = (option: string) => {
         setSelectedOptions(prev =>
@@ -136,17 +151,28 @@ export default function StudiosPage() {
                                     </p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {filteredPhotographers.map((photographer, index) => (
-                                        <div
-                                            key={photographer.id}
-                                            className="animate-slide-up"
-                                            style={{ animationDelay: `${index * 50}ms` }}
-                                        >
-                                            <PhotographerCard photographer={photographer} />
-                                        </div>
-                                    ))}
-                                </div>
+                                <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {currentPhotographers.map((photographer, index) => (
+                                            <div
+                                                key={photographer.id}
+                                                className="animate-slide-up"
+                                                style={{ animationDelay: `${index * 50}ms` }}
+                                            >
+                                                <PhotographerCard photographer={photographer} />
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* ページネーション */}
+                                    {totalPages > 1 && (
+                                        <Pagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={setCurrentPage}
+                                        />
+                                    )}
+                                </>
                             )}
                         </main>
                     </div>

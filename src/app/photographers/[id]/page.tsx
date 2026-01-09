@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getPhotographerById } from '@/lib/services/photographerService';
 import { RANK_DISPLAY_NAMES, RANK_ICONS } from '@/lib/constants/membershipTiers';
+import { ReviewSection } from '@/components/ReviewSection';
 
 interface PhotographerDetailPageProps {
     params: Promise<{
@@ -161,6 +162,9 @@ export default async function PhotographerDetailPage({ params }: PhotographerDet
                             </div>
                         </div>
                     )}
+
+                    {/* Reviews Section */}
+                    <ReviewSection photographerId={photographer.id} />
 
                     {/* Contact */}
                     <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-8 animate-slide-up" style={{ animationDelay: '200ms' }}>

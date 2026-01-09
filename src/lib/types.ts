@@ -100,6 +100,17 @@ export interface Inquiry {
   status: 'Sent' | 'Read';
 }
 
+// レビュー・口コミ情報
+export interface Review {
+  id: string;
+  photographerId: string;
+  customerName: string;
+  rating: number; // 1-5の星評価
+  comment: string;
+  createdAt: Date;
+  isApproved: boolean; // 管理者承認済みかどうか
+}
+
 // 沖縄市町村情報
 export interface OkinawaMunicipality {
   id: string;
