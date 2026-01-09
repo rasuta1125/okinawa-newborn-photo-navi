@@ -1,16 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getFreelancers, getAllAreas, getAllOptions } from '@/lib/services/photographerService';
 import { PhotographerCard } from '@/components/PhotographerCard';
+import { Photographer } from '@/lib/types';
 
 export default function FreelancePhotographersPage() {
     const [selectedArea, setSelectedArea] = useState<string>('');
     const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+    const [allPhotographers, setAllPhotographers] = useState<Photographer[]>([]);
+    const [areas, setAreas] = useState<string[]>([]);
+    const [options, setOptions] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const allPhotographers = getFreelancers('newborn');
-    const areas = getAllAreas();
-    const options = getAllOptions();
+    useEffect(() => {
+        async function loadData() {
+            setIsLoading(true);
+            try {
+                const [photographers, areasData, optionsData] = await Promise.all([
+                    getFreelancers(),
+                    getAllAreas(),
+                    getAllOptions()
+                ]);
+                setAllPhotographers(photographers);
+                setAreas(areasData);
+                setOptions(optionsData);
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadData();
+    }, []);
 
     // フィルタリング
     const filteredPhotographers = allPhotographers.filter(p => {
@@ -22,8 +44,19 @@ export default function FreelancePhotographersPage() {
     const toggleOption = (option: string) => {
         setSelectedOptions(prev =>
             prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]
-        );
+        )
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[var(--cream)] flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+                    <p className="text-[var(--primary-light)]">読み込み中...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[var(--cream)]">

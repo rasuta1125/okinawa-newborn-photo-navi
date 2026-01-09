@@ -1,8 +1,8 @@
-import { getAllPhotographers } from '@/lib/services/photographerService';
+import { get100DaysPhotographers } from '@/lib/services/photographerService';
 import { PhotographerCard } from '@/components/PhotographerCard';
 
-export default function HundredDaysPage() {
-    const photographers = getAllPhotographers('100days');
+export default async function HundredDaysPage() {
+    const photographers = await get100DaysPhotographers();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[var(--cream)] to-[var(--beige)]">

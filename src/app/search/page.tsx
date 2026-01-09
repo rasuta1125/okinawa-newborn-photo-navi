@@ -1,13 +1,16 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { searchPhotographers } from '@/lib/services/photographerService';
 import { PhotographerCard } from '@/components/PhotographerCard';
-import { SearchFilters, PhotographerType } from '@/lib/types';
+import { SearchFilters, PhotographerType, Photographer } from '@/lib/types';
 import { Suspense } from 'react';
 
 function SearchResults() {
     const searchParams = useSearchParams();
+    const [results, setResults] = useState<Photographer[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const filters: SearchFilters = {
         area: searchParams.get('area') || undefined,
@@ -15,9 +18,34 @@ function SearchResults() {
         photographerType: (searchParams.get('type') as PhotographerType) || undefined,
     };
 
-    const results = searchPhotographers(filters);
+    useEffect(() => {
+        async function loadResults() {
+            setIsLoading(true);
+            try {
+                const photographers = await searchPhotographers(filters);
+                setResults(photographers);
+            } catch (error) {
+                console.error('Error loading photographers:', error);
+                setResults([]);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        loadResults();
+    }, [searchParams]);
 
     const hasFilters = filters.area || (filters.options && filters.options.length > 0) || filters.photographerType;
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[var(--cream)] to-[var(--beige)] flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+                    <p className="text-[var(--primary-light)]">検索中...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[var(--cream)] to-[var(--beige)]">

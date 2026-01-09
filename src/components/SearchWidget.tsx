@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAllAreas, getAllOptions } from '@/lib/services/photographerService';
 import { PhotographerType } from '@/lib/types';
@@ -10,9 +10,24 @@ export function SearchWidget() {
     const [area, setArea] = useState('');
     const [options, setOptions] = useState<string[]>([]);
     const [type, setType] = useState<PhotographerType | ''>('');
+    const [areas, setAreas] = useState<string[]>([]);
+    const [allOptions, setAllOptions] = useState<string[]>([]);
 
-    const areas = getAllAreas();
-    const allOptions = getAllOptions();
+    useEffect(() => {
+        async function loadData() {
+            try {
+                const [areasData, optionsData] = await Promise.all([
+                    getAllAreas(),
+                    getAllOptions()
+                ]);
+                setAreas(areasData);
+                setAllOptions(optionsData);
+            } catch (error) {
+                console.error('Error loading search data:', error);
+            }
+        }
+        loadData();
+    }, []);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

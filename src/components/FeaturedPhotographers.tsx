@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { getFeaturedPhotographers } from '@/lib/services/photographerService';
 import { PhotographerCard } from './PhotographerCard';
 
-export function FeaturedPhotographers() {
-    const featured = getFeaturedPhotographers(6);
+export async function FeaturedPhotographers() {
+    const featured = await getFeaturedPhotographers(6);
 
     return (
         <section className="section bg-gradient-to-br from-[var(--cream)] to-[var(--beige)]">

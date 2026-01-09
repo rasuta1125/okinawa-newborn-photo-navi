@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminLoginPage() {
     const router = useRouter();
+    const { signIn } = useAuth();
     const [credentials, setCredentials] = useState({
         email: '',
         password: '',
@@ -17,28 +19,24 @@ export default function AdminLoginPage() {
         setError('');
         setIsLoading(true);
 
-        // 簡易認証（本番環境では必ずバックエンドで認証してください）
-        // 管理者認証情報
-        const ADMIN_CREDENTIALS = {
-            email: 'yuto_sakaguchi@aimable00.com',
-            password: 'aimable123!',
-        };
-
         try {
-            // 認証チェック
-            if (
-                credentials.email === ADMIN_CREDENTIALS.email &&
-                credentials.password === ADMIN_CREDENTIALS.password
-            ) {
-                // ログイン成功
-                localStorage.setItem('adminAuth', 'true');
-                localStorage.setItem('adminEmail', credentials.email);
-                router.push('/admin');
-            } else {
+            // Firebase Authenticationでログイン
+            await signIn(credentials.email, credentials.password);
+            // ログイン成功 - 管理画面にリダイレクト
+            router.push('/admin');
+        } catch (err: any) {
+            // エラーハンドリング
+            console.error('Login error:', err);
+
+            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
                 setError('メールアドレスまたはパスワードが正しくありません');
+            } else if (err.code === 'auth/too-many-requests') {
+                setError('ログイン試行回数が多すぎます。しばらく待ってから再度お試しください');
+            } else if (err.code === 'auth/invalid-credential') {
+                setError('認証情報が無効です。メールアドレスとパスワードを確認してください');
+            } else {
+                setError('ログインに失敗しました。もう一度お試しください');
             }
-        } catch (err) {
-            setError('ログインに失敗しました');
         } finally {
             setIsLoading(false);
         }

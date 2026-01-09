@@ -23,9 +23,17 @@ export function PhotographerCard({ photographer }: PhotographerCardProps) {
             <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group h-full flex flex-col">
                 {/* Image */}
                 <div className="relative h-56 bg-gradient-to-br from-orange-50 to-orange-100 overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-300">
-                        📸
-                    </div>
+                    {photographer.profileImage ? (
+                        <img
+                            src={photographer.profileImage}
+                            alt={photographer.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-300">
+                            📸
+                        </div>
+                    )}
                     {/* Rank Badge */}
                     <div className="absolute top-3 right-3">
                         <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${badgeClass}`}>
@@ -65,38 +73,46 @@ export function PhotographerCard({ photographer }: PhotographerCardProps) {
                     </div>
 
                     {/* Areas */}
-                    <div className="mb-3">
-                        <div className="flex items-start gap-2">
-                            <svg className="w-4 h-4 text-[#FF9500] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span className="text-sm text-gray-600">
-                                {photographer.areas.slice(0, 2).join('、')}
-                                {photographer.areas.length > 2 && ` 他${photographer.areas.length - 2}件`}
-                            </span>
+                    {photographer.areas && photographer.areas.length > 0 && (
+                        <div className="mb-3">
+                            <div className="flex items-start gap-2">
+                                <svg className="w-4 h-4 text-[#FF9500] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span className="text-sm text-gray-600">
+                                    {photographer.areas.slice(0, 2).join('、')}
+                                    {photographer.areas.length > 2 && ` 他${photographer.areas.length - 2}件`}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Description */}
                     <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">
-                        {photographer.description}
+                        {photographer.description || '説明はまだ登録されていません。'}
                     </p>
 
                     {/* Options Tags */}
                     <div className="flex flex-wrap gap-2 mb-4">
-                        {photographer.options.slice(0, 3).map(option => (
-                            <span
-                                key={option}
-                                className="px-2.5 py-1 bg-orange-50 text-[#FF9500] text-xs font-medium rounded-md border border-orange-200"
-                            >
-                                {option}
-                            </span>
-                        ))}
-                        {photographer.options.length > 3 && (
-                            <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
-                                +{photographer.options.length - 3}
-                            </span>
+                        {photographer.options && photographer.options.length > 0 ? (
+                            <>
+                                {photographer.options.slice(0, 3).map(option => (
+                                    <span
+                                        key={option}
+                                        className="px-2.5 py-1 bg-orange-50 text-[#FF9500] text-xs font-medium rounded-md border border-orange-200"
+                                    >
+                                        {option}
+                                    </span>
+                                ))}
+                                {photographer.options.length > 3 && (
+                                    <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
+                                        +{photographer.options.length - 3}
+                                    </span>
+                                )}
+                            </>
+                        ) : (
+                            <span className="text-xs text-gray-400">サービス未登録</span>
                         )}
                     </div>
 

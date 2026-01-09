@@ -1,17 +1,14 @@
 // Service functions for photographer data
 
 import { Photographer, SearchFilters, PhotographerType } from '../types';
-import { photographers } from '../mockData';
+import {
+    getAllPhotographers,
+    searchPhotographers as searchInFirestore
+} from '../repositories/photographerRepository';
 import { MEMBERSHIP_TIERS } from '../constants/membershipTiers';
 
-/**
- * 承認済み・公開中の写真家のみ取得
- */
-function getApprovedPhotographers(): Photographer[] {
-    return photographers.filter(
-        p => p.approvalStatus === 'Approved' && p.isPublished
-    );
-}
+// Re-export repository functions
+export { getAllPhotographers } from '../repositories/photographerRepository';
 
 /**
  * ニューボーンフォト用のソート（ランク別表示順位）
@@ -53,127 +50,143 @@ export function sortPhotographersFor100Days(photographers: Photographer[]): Phot
         if (a.fixedRanking100Days) return -1;
         if (b.fixedRanking100Days) return 1;
 
-        // その他は通常のランク順
-        const sortedNormal = sortPhotographersForNewborn([a, b]);
-        return sortedNormal[0] === a ? -1 : 1;
+        // ランク別優先度
+        const priorityA = MEMBERSHIP_TIERS[a.membershipRank].displayPriority;
+        const priorityB = MEMBERSHIP_TIERS[b.membershipRank].displayPriority;
+        return priorityB - priorityA;
     });
 }
 
 /**
- * すべての写真家を取得（ランク順）
+ * ニューボーンフォトグラファー取得
  */
-export function getAllPhotographers(section?: 'newborn' | '100days'): Photographer[] {
-    const approved = getApprovedPhotographers();
-
-    if (section === '100days') {
-        return sortPhotographersFor100Days(approved);
-    }
-
-    return sortPhotographersForNewborn(approved);
+export async function getNewbornPhotographers(): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    const filtered = approved.filter((p: Photographer) => p.options.includes('ニューボーン'));
+    return sortPhotographersForNewborn(filtered);
 }
 
 /**
- * 写真家をIDで取得
+ * ニューボーンスタジオ取得
  */
-export function getPhotographerById(id: string): Photographer | undefined {
-    return photographers.find(p => p.id === id);
+export async function getNewbornStudios(): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    return approved.filter((p: Photographer) =>
+        p.photographerType === 'Studio' && p.options.includes('ニューボーン')
+    );
 }
 
 /**
- * 写真家を検索（フィルター適用）
+ * 100日祝い写真家取得
  */
-export function searchPhotographers(filters: SearchFilters): Photographer[] {
-    let results = getApprovedPhotographers();
-
-    // エリアフィルター
-    if (filters.area) {
-        results = results.filter(p => p.areas.includes(filters.area!));
-    }
-
-    // オプションフィルター
-    if (filters.options && filters.options.length > 0) {
-        results = results.filter(p =>
-            filters.options!.some(option => p.options.includes(option))
-        );
-    }
-
-    // 写真家タイプフィルター
-    if (filters.photographerType) {
-        results = results.filter(p => p.photographerType === filters.photographerType);
-    }
-
-    // セクション別ソート
-    if (filters.section === '100days') {
-        return sortPhotographersFor100Days(results);
-    }
-
-    return sortPhotographersForNewborn(results);
+export async function get100DaysPhotographers(): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    const filtered = approved.filter((p: Photographer) => p.options.includes('100日祝い'));
+    return sortPhotographersFor100Days(filtered);
 }
 
 /**
- * 注目の写真家を取得（トップN件）
+ * バースデーフォト写真家取得
  */
-export function getFeaturedPhotographers(limit: number = 6, section?: 'newborn' | '100days'): Photographer[] {
-    const sorted = getAllPhotographers(section);
-    return sorted.slice(0, limit);
+export async function getBirthdayPhotographers(): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    return approved.filter((p: Photographer) => p.options.includes('バースデーフォト'));
 }
 
 /**
- * スタジオのみ取得
+ * 753写真家取得
  */
-export function getStudios(section?: 'newborn' | '100days'): Photographer[] {
-    const approved = getApprovedPhotographers();
-    const studios = approved.filter(p => p.photographerType === 'Studio');
-
-    if (section === '100days') {
-        return sortPhotographersFor100Days(studios);
-    }
-
-    return sortPhotographersForNewborn(studios);
+export async function get753Photographers(): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    return approved.filter((p: Photographer) => p.options.includes('753'));
 }
 
 /**
- * フリーランスのみ取得
+ * 写真家検索
  */
-export function getFreelancers(section?: 'newborn' | '100days'): Photographer[] {
-    const approved = getApprovedPhotographers();
-    const freelancers = approved.filter(p => p.photographerType === 'Freelance');
-
-    if (section === '100days') {
-        return sortPhotographersFor100Days(freelancers);
-    }
-
-    return sortPhotographersForNewborn(freelancers);
+export async function searchPhotographers(filters: SearchFilters): Promise<Photographer[]> {
+    return await searchInFirestore(filters);
 }
 
 /**
- * すべてのエリアを取得
+ * エリア別写真家取得
  */
-export function getAllAreas(): string[] {
+export async function getPhotographersByArea(area: string): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    return approved.filter((p: Photographer) => p.areas.includes(area));
+}
+
+/**
+ * 管理者用：全写真家取得（承認状態・公開状態問わず）
+ */
+export function getAllPhotographersForAdmin(): Photographer[] {
+    // This function is kept for backward compatibility but should not be used
+    // Use the repository function directly instead
+    return [];
+}
+
+/**
+ * 管理者用：承認待ち写真家取得
+ */
+export function getPendingPhotographers(): Photographer[] {
+    // This function is kept for backward compatibility but should not be used
+    // Use the repository function directly instead
+    return [];
+}
+
+/**
+ * ID指定で写真家取得
+ */
+export async function getPhotographerById(id: string): Promise<Photographer | null> {
+    const approved = await getAllPhotographers();
+    return approved.find((p: Photographer) => p.id === id) || null;
+}
+
+/**
+ * 全エリア取得
+ */
+export async function getAllAreas(): Promise<string[]> {
+    const approved = await getAllPhotographers();
     const areasSet = new Set<string>();
-    photographers.forEach(p => {
-        p.areas.forEach(area => areasSet.add(area));
+    approved.forEach((p: Photographer) => {
+        p.areas.forEach((area: string) => areasSet.add(area));
     });
     return Array.from(areasSet).sort();
 }
 
 /**
- * すべてのオプションを取得
+ * 全オプション取得
  */
-export function getAllOptions(): string[] {
-    return ['ニューボーン', '出張撮影', '100日祝い', 'バースデーフォト', '753'];
+export async function getAllOptions(): Promise<string[]> {
+    const approved = await getAllPhotographers();
+    const optionsSet = new Set<string>();
+    approved.forEach((p: Photographer) => {
+        p.options.forEach((option: string) => optionsSet.add(option));
+    });
+    return Array.from(optionsSet).sort();
 }
 
 /**
- * 承認待ちの写真家を取得（管理画面用）
+ * 注目の写真家取得（ランクの高い写真家を優先）
  */
-export function getPendingPhotographers(): Photographer[] {
-    return photographers.filter(p => p.approvalStatus === 'Pending');
+export async function getFeaturedPhotographers(limit: number = 6): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    const sorted = sortPhotographersForNewborn(approved);
+    return sorted.slice(0, limit);
 }
 
 /**
- * すべての写真家を取得（管理画面用）
+ * フリーランス写真家取得
  */
-export function getAllPhotographersForAdmin(): Photographer[] {
-    return photographers;
+export async function getFreelancers(): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    return approved.filter((p: Photographer) => p.photographerType === 'Freelance');
+}
+
+/**
+ * スタジオ写真家取得
+ */
+export async function getStudios(): Promise<Photographer[]> {
+    const approved = await getAllPhotographers();
+    return approved.filter((p: Photographer) => p.photographerType === 'Studio');
 }

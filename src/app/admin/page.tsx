@@ -2,20 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAllPhotographersForAdmin, getPendingPhotographers } from '@/lib/services/photographerService';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+    getAllPhotographersForAdmin as getPhotographersFromFirestore,
+    getPendingPhotographers as getPendingFromFirestore,
+    createPhotographer,
+    updatePhotographer,
+    deletePhotographer,
+    approvePhotographer,
+    togglePublishStatus
+} from '@/lib/repositories/photographerRepository';
 import { Photographer, MembershipRank, PhotographerType } from '@/lib/types';
 import { RANK_DISPLAY_NAMES, RANK_ICONS, MEMBERSHIP_TIERS } from '@/lib/constants/membershipTiers';
 import { getAllMunicipalityNames } from '@/lib/constants/okinawaMunicipalities';
+import { ImageUpload } from '@/components/ImageUpload';
+import { GalleryUpload } from '@/components/GalleryUpload';
 
 export default function AdminPage() {
     const router = useRouter();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const { user, loading, signOut, isAdmin } = useAuth();
     const [activeTab, setActiveTab] = useState<'list' | 'add' | 'pending'>('list');
-    const [photographers, setPhotographers] = useState(getAllPhotographersForAdmin());
+    const [photographers, setPhotographers] = useState<Photographer[]>([]);
+    const [pendingPhotographers, setPendingPhotographers] = useState<Photographer[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 新規登録フォーム - すべてのuseStateをここに移動
+    // 新規登録フォーム
     const [formData, setFormData] = useState<Partial<Photographer>>({
         name: '',
         photographerType: 'Studio',
@@ -24,42 +36,120 @@ export default function AdminPage() {
         options: [],
         handprintOption: false,
         description: '',
+        profileImage: '',
+        coverImage: '',
+        gallery: [],
         email: '',
         phone: '',
         website: '',
         snsLinks: {},
         approvalStatus: 'Approved',
         isPublished: true,
+        maxGalleryImages: 5,
     });
 
     const allAreas = getAllMunicipalityNames();
     const allOptions = ['ニューボーン', '出張撮影', '100日祝い', 'バースデーフォト', '753'];
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editingId) {
-            alert(`写真家 ID: ${editingId} を更新しました（モック）`);
-            setEditingId(null);
-            setActiveTab('list');
-        } else {
-            alert('データベース連携後に実装されます。現在はモックデータのみです。');
+    // Load photographers from Firestore
+    useEffect(() => {
+        if (user && isAdmin) {
+            loadPhotographers();
         }
-        // フォームをリセット
-        setFormData({
-            name: '',
-            photographerType: 'Studio',
-            membershipRank: 'Free',
-            areas: [],
-            options: [],
-            handprintOption: false,
-            description: '',
-            email: '',
-            phone: '',
-            website: '',
-            snsLinks: {},
-            approvalStatus: 'Approved',
-            isPublished: true,
-        });
+    }, [user, isAdmin]);
+
+    const loadPhotographers = async () => {
+        try {
+            const [allPhotographers, pending] = await Promise.all([
+                getPhotographersFromFirestore(),
+                getPendingFromFirestore()
+            ]);
+            setPhotographers(allPhotographers);
+            setPendingPhotographers(pending);
+        } catch (error) {
+            console.error('Error loading photographers:', error);
+            alert('写真家データの読み込みに失敗しました');
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        try {
+            if (editingId) {
+                // 楽観的UI更新: すぐにリストを更新
+                setPhotographers(prev =>
+                    prev.map(p => p.id === editingId ? { ...p, ...formData } as Photographer : p)
+                );
+
+                // Update existing photographer
+                await updatePhotographer(editingId, formData);
+                alert('写真家情報を更新しました');
+                setEditingId(null);
+            } else {
+                // Create new photographer
+                const photographerData = {
+                    ...formData,
+                    profileImage: formData.profileImage || '/images/photographers/default-profile.jpg',
+                    coverImage: formData.coverImage || '/images/photographers/default-cover.jpg',
+                    gallery: formData.gallery || [],
+                    maxGalleryImages: MEMBERSHIP_TIERS[formData.membershipRank!].maxGalleryImages,
+                } as Omit<Photographer, 'id' | 'createdAt' | 'updatedAt'>;
+
+                // 楽観的UI更新: 仮IDで即座にリストに追加
+                const tempId = `temp-${Date.now()}`;
+                const tempPhotographer = {
+                    ...photographerData,
+                    id: tempId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                } as Photographer;
+
+                setPhotographers(prev => [...prev, tempPhotographer]);
+                alert('新しい写真家を登録しています...');
+
+                // バックグラウンドで実際に保存
+                const newId = await createPhotographer(photographerData);
+
+                // 仮IDを実際のIDに置き換え
+                setPhotographers(prev =>
+                    prev.map(p => p.id === tempId ? { ...p, id: newId } : p)
+                );
+            }
+
+            // Reset form
+            setFormData({
+                name: '',
+                photographerType: 'Studio',
+                membershipRank: 'Free',
+                areas: [],
+                options: [],
+                handprintOption: false,
+                description: '',
+                profileImage: '',
+                coverImage: '',
+                gallery: [],
+                email: '',
+                phone: '',
+                website: '',
+                snsLinks: {},
+                approvalStatus: 'Approved',
+                isPublished: true,
+                maxGalleryImages: 5,
+            });
+
+            setActiveTab('list');
+            // バックグラウンドでリロード
+            loadPhotographers();
+        } catch (error) {
+            console.error('Error saving photographer:', error);
+            alert('保存に失敗しました: ' + (error as Error).message);
+            // エラー時は再読み込み
+            await loadPhotographers();
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleEdit = (photographer: Photographer) => {
@@ -68,39 +158,58 @@ export default function AdminPage() {
         setActiveTab('add');
     };
 
-    const handleDelete = (id: string) => {
-        if (confirm('本当に削除しますか？')) {
-            alert(`写真家 ID: ${id} を削除しました（モック）`);
+    const handleDelete = async (id: string) => {
+        if (!confirm('本当に削除しますか？')) return;
+
+        try {
+            await deletePhotographer(id);
+            alert('写真家を削除しました');
+            await loadPhotographers();
+        } catch (error) {
+            console.error('Error deleting photographer:', error);
+            alert('削除に失敗しました');
         }
     };
 
-    const togglePublish = (id: string) => {
-        alert(`写真家 ID: ${id} の公開状態を切り替えました（モック）`);
+    const togglePublish = async (id: string, currentStatus: boolean) => {
+        try {
+            await togglePublishStatus(id, !currentStatus);
+            alert(`公開状態を${!currentStatus ? '公開' : '非公開'}に変更しました`);
+            await loadPhotographers();
+        } catch (error) {
+            console.error('Error toggling publish status:', error);
+            alert('公開状態の変更に失敗しました');
+        }
+    };
+
+    const handleApprove = async (id: string) => {
+        try {
+            await approvePhotographer(id);
+            alert('写真家を承認しました');
+            await loadPhotographers();
+        } catch (error) {
+            console.error('Error approving photographer:', error);
+            alert('承認に失敗しました');
+        }
     };
 
     // 認証チェック
     useEffect(() => {
-        const checkAuth = () => {
-            const auth = localStorage.getItem('adminAuth');
-            if (auth === 'true') {
-                setIsAuthenticated(true);
-            } else {
+        if (!loading) {
+            if (!user || !isAdmin) {
                 router.push('/admin/login');
             }
-            setIsLoading(false);
-        };
-        checkAuth();
-    }, [router]);
+        }
+    }, [user, loading, isAdmin, router]);
 
     // ログアウト
-    const handleLogout = () => {
-        localStorage.removeItem('adminAuth');
-        localStorage.removeItem('adminEmail');
+    const handleLogout = async () => {
+        await signOut();
         router.push('/admin/login');
     };
 
     // 認証チェック中
-    if (isLoading) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
@@ -112,7 +221,7 @@ export default function AdminPage() {
     }
 
     // 未認証の場合は何も表示しない（リダイレクト中）
-    if (!isAuthenticated) {
+    if (!user || !isAdmin) {
         return null;
     }
 
@@ -167,9 +276,9 @@ export default function AdminPage() {
                                     }`}
                             >
                                 承認待ち
-                                {getPendingPhotographers().length > 0 && (
+                                {pendingPhotographers.length > 0 && (
                                     <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                                        {getPendingPhotographers().length}
+                                        {pendingPhotographers.length}
                                     </span>
                                 )}
                             </button>
@@ -222,7 +331,7 @@ export default function AdminPage() {
                                                         編集
                                                     </button>
                                                     <button
-                                                        onClick={() => togglePublish(p.id)}
+                                                        onClick={() => togglePublish(p.id, p.isPublished)}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         {p.isPublished ? '非公開にする' : '公開する'}
@@ -350,6 +459,43 @@ export default function AdminPage() {
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* 画像アップロード */}
+                                <div className="border-b border-gray-200 pb-6">
+                                    <h3 className="text-lg font-medium text-gray-900 mb-4">画像</h3>
+                                    <div className="space-y-6">
+                                        {/* プロフィール画像 */}
+                                        <ImageUpload
+                                            label="プロフィール画像"
+                                            currentImageUrl={formData.profileImage}
+                                            onUploadComplete={(url) => setFormData({ ...formData, profileImage: url })}
+                                        />
+
+                                        {/* カバー画像 */}
+                                        <ImageUpload
+                                            label="カバー画像"
+                                            currentImageUrl={formData.coverImage}
+                                            onUploadComplete={(url) => setFormData({ ...formData, coverImage: url })}
+                                        />
+
+                                        {/* ギャラリー写真 */}
+                                        {editingId && (
+                                            <GalleryUpload
+                                                photographerId={editingId}
+                                                currentGallery={formData.gallery || []}
+                                                maxImages={formData.maxGalleryImages || 5}
+                                                onGalleryUpdate={(gallery) => setFormData({ ...formData, gallery })}
+                                            />
+                                        )}
+                                        {!editingId && (
+                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                <p className="text-sm text-blue-800">
+                                                    💡 ギャラリー写真は、写真家を登録した後に追加できます。
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -546,9 +692,10 @@ export default function AdminPage() {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                        disabled={isSubmitting}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {editingId ? '更新する' : '登録する'}
+                                        {isSubmitting ? '保存中...' : (editingId ? '更新する' : '登録する')}
                                     </button>
                                 </div>
                             </form>
@@ -560,11 +707,11 @@ export default function AdminPage() {
                     <div className="bg-white rounded-lg shadow-sm">
                         <div className="p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">承認待ちリスト</h2>
-                            {getPendingPhotographers().length === 0 ? (
+                            {pendingPhotographers.length === 0 ? (
                                 <p className="text-gray-500 text-center py-8">承認待ちの写真家はいません</p>
                             ) : (
                                 <div className="space-y-4">
-                                    {getPendingPhotographers().map(p => (
+                                    {pendingPhotographers.map((p: Photographer) => (
                                         <div key={p.id} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex justify-between items-start">
                                                 <div>
@@ -572,7 +719,10 @@ export default function AdminPage() {
                                                     <p className="text-sm text-gray-600">{p.email}</p>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                                    <button
+                                                        onClick={() => handleApprove(p.id)}
+                                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                                    >
                                                         承認
                                                     </button>
                                                     <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">

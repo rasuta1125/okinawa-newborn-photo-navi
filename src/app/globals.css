@@ -71,13 +71,13 @@ h6 {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--photorait-orange) 0%, var(--photorait-orange-dark) 100%);
-  color: white;
+  background: linear-gradient(135deg, #FF9500 0%, #FF8000 100%) !important;
+  color: white !important;
   box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--photorait-orange-dark) 0%, var(--photorait-orange) 100%);
+  background: linear-gradient(135deg, #FF8000 0%, #FF9500 100%) !important;
   box-shadow: 0 6px 20px rgba(255, 149, 0, 0.4);
   transform: translateY(-2px);
 }
