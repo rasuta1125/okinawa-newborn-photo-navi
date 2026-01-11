@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Resendインスタンスは実行時に初期化
+const getResendClient = () => {
+    if (!process.env.RESEND_API_KEY) {
+        throw new Error('RESEND_API_KEY is not configured');
+    }
+    return new Resend(process.env.RESEND_API_KEY);
+};
 
 export async function POST(request: NextRequest) {
     try {
@@ -17,6 +23,7 @@ export async function POST(request: NextRequest) {
         }
 
         // メール送信
+        const resend = getResendClient();
         const { data, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || 'ニューボーンフォトナビ <noreply@yourdomain.com>',
             to: [photographerEmail],
