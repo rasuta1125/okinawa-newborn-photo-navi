@@ -1,9 +1,16 @@
 import Link from 'next/link';
 import { getFeaturedPhotographers } from '@/lib/services/photographerService';
 import { PhotographerCard } from './PhotographerCard';
+import { Photographer } from '@/lib/types';
 
 export async function FeaturedPhotographers() {
-    const featured = await getFeaturedPhotographers(6);
+    let featured: Photographer[];
+    try {
+        featured = await getFeaturedPhotographers(6);
+    } catch (error) {
+        console.error('Failed to fetch featured photographers:', error);
+        featured = [];
+    }
 
     return (
         <section className="section bg-gradient-to-br from-[var(--cream)] to-[var(--beige)]">
