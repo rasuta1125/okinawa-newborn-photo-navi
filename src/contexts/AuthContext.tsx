@@ -8,7 +8,7 @@ import {
     onAuthStateChanged,
     UserCredential,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { getFirebaseAuth } from '@/lib/firebase';
 
 interface AuthContextType {
     user: User | null;
@@ -25,19 +25,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
-            setLoading(false);
-        });
+        try {
+            const auth = getFirebaseAuth();
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                setUser(user);
+                setLoading(false);
+            });
 
-        return unsubscribe;
+            return unsubscribe;
+        } catch (error) {
+            console.warn('Firebase Auth is not configured:', error);
+            setLoading(false);
+            return () => { };
+        }
     }, []);
 
     const signIn = async (email: string, password: string) => {
+        const auth = getFirebaseAuth();
         return signInWithEmailAndPassword(auth, email, password);
     };
 
     const signOut = async () => {
+        const auth = getFirebaseAuth();
         return firebaseSignOut(auth);
     };
 

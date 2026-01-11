@@ -1,6 +1,6 @@
 // Firebase Storage service for image uploads
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { getFirebaseStorage } from '@/lib/firebase';
 
 /**
  * 画像をFirebase Storageにアップロード
@@ -10,6 +10,7 @@ import { storage } from '@/lib/firebase';
  */
 export async function uploadImage(file: File, path: string): Promise<string> {
     try {
+        const storage = getFirebaseStorage();
         console.log('🔧 Firebase Storage設定確認');
         console.log('  - Storage instance:', storage);
         console.log('  - File:', file.name, file.type, file.size);
@@ -81,6 +82,7 @@ export async function uploadGalleryImage(file: File, photographerId: string, ind
  */
 export async function deleteImage(url: string): Promise<void> {
     try {
+        const storage = getFirebaseStorage();
         // URLからパスを抽出
         const urlObj = new URL(url);
         const pathMatch = urlObj.pathname.match(/\/o\/(.+)\?/);

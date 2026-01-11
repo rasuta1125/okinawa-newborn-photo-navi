@@ -14,7 +14,7 @@ import {
     DocumentData,
     QueryConstraint,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getFirebaseDb } from '@/lib/firebase';
 import { Photographer, ApprovalStatus } from '@/lib/types';
 
 const PHOTOGRAPHERS_COLLECTION = 'photographers';
@@ -30,6 +30,7 @@ function convertTimestamps(data: DocumentData): Photographer {
 
 // Get all photographers (approved and published only)
 export async function getAllPhotographers(): Promise<Photographer[]> {
+    const db = getFirebaseDb();
     const q = query(
         collection(db, PHOTOGRAPHERS_COLLECTION),
         where('approvalStatus', '==', 'Approved'),
@@ -45,6 +46,7 @@ export async function getAllPhotographers(): Promise<Photographer[]> {
 
 // Get photographer by ID
 export async function getPhotographerById(id: string): Promise<Photographer | null> {
+    const db = getFirebaseDb();
     const docRef = doc(db, PHOTOGRAPHERS_COLLECTION, id);
     const docSnap = await getDoc(docRef);
 
@@ -58,6 +60,7 @@ export async function getPhotographerById(id: string): Promise<Photographer | nu
 
 // Get all photographers for admin (including pending and unpublished)
 export async function getAllPhotographersForAdmin(): Promise<Photographer[]> {
+    const db = getFirebaseDb();
     const snapshot = await getDocs(collection(db, PHOTOGRAPHERS_COLLECTION));
     return snapshot.docs.map((doc) => {
         const data = convertTimestamps(doc.data());
@@ -67,6 +70,7 @@ export async function getAllPhotographersForAdmin(): Promise<Photographer[]> {
 
 // Get pending photographers
 export async function getPendingPhotographers(): Promise<Photographer[]> {
+    const db = getFirebaseDb();
     const q = query(
         collection(db, PHOTOGRAPHERS_COLLECTION),
         where('approvalStatus', '==', 'Pending')
@@ -83,6 +87,7 @@ export async function getPendingPhotographers(): Promise<Photographer[]> {
 export async function createPhotographer(
     data: Omit<Photographer, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
+    const db = getFirebaseDb();
     const now = Timestamp.now();
     const docRef = await addDoc(collection(db, PHOTOGRAPHERS_COLLECTION), {
         ...data,
@@ -97,6 +102,7 @@ export async function updatePhotographer(
     id: string,
     data: Partial<Photographer>
 ): Promise<void> {
+    const db = getFirebaseDb();
     const docRef = doc(db, PHOTOGRAPHERS_COLLECTION, id);
     await updateDoc(docRef, {
         ...data,
@@ -106,6 +112,7 @@ export async function updatePhotographer(
 
 // Delete photographer
 export async function deletePhotographer(id: string): Promise<void> {
+    const db = getFirebaseDb();
     const docRef = doc(db, PHOTOGRAPHERS_COLLECTION, id);
     await deleteDoc(docRef);
 }
@@ -136,6 +143,7 @@ export async function searchPhotographers(filters: {
     options?: string[];
     photographerType?: 'Studio' | 'Freelance';
 }): Promise<Photographer[]> {
+    const db = getFirebaseDb();
     const constraints: QueryConstraint[] = [
         where('approvalStatus', '==', 'Approved'),
         where('isPublished', '==', true),
