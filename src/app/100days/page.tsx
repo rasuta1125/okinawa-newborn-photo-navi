@@ -1,8 +1,18 @@
 import { get100DaysPhotographers } from '@/lib/services/photographerService';
 import { PhotographerCard } from '@/components/PhotographerCard';
+import { Photographer } from '@/lib/types';
+
+// Force dynamic rendering to avoid build-time Firebase initialization
+export const dynamic = 'force-dynamic';
 
 export default async function HundredDaysPage() {
-    const photographers = await get100DaysPhotographers();
+    let photographers: Photographer[];
+    try {
+        photographers = await get100DaysPhotographers();
+    } catch (error) {
+        console.error('Failed to fetch photographers:', error);
+        photographers = [];
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[var(--cream)] to-[var(--beige)]">

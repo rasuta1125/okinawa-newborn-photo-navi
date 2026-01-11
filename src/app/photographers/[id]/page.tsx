@@ -3,6 +3,9 @@ import { getPhotographerById } from '@/lib/services/photographerService';
 import { RANK_DISPLAY_NAMES, RANK_ICONS } from '@/lib/constants/membershipTiers';
 import { ReviewSection } from '@/components/ReviewSection';
 
+// Force dynamic rendering to avoid build-time Firebase initialization
+export const dynamic = 'force-dynamic';
+
 interface PhotographerDetailPageProps {
     params: Promise<{
         id: string;
@@ -11,7 +14,14 @@ interface PhotographerDetailPageProps {
 
 export default async function PhotographerDetailPage({ params }: PhotographerDetailPageProps) {
     const { id } = await params;
-    const photographer = await getPhotographerById(id);
+
+    let photographer;
+    try {
+        photographer = await getPhotographerById(id);
+    } catch (error) {
+        console.error('Failed to fetch photographer:', error);
+        notFound();
+    }
 
     if (!photographer) {
         notFound();
