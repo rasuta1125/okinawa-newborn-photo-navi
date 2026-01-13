@@ -49,10 +49,8 @@ const initializeFirebase = () => {
   storage = getStorage(app);
 };
 
-// Initialize only if we're in the browser or if Firebase is configured
-if (typeof window !== 'undefined' && isFirebaseConfigured()) {
-  initializeFirebase();
-}
+// Don't auto-initialize - let getter functions handle it
+// This prevents build-time initialization while ensuring runtime initialization works
 
 // Getter functions that ensure Firebase is initialized
 export const getFirebaseApp = (): FirebaseApp => {
@@ -67,10 +65,17 @@ export const getFirebaseApp = (): FirebaseApp => {
 
 export const getFirebaseAuth = (): Auth => {
   if (!auth && isFirebaseConfigured()) {
+    console.log('Initializing Firebase Auth...');
     initializeFirebase();
   }
   if (!auth) {
-    throw new Error('Firebase Auth is not configured.');
+    console.error('Firebase Auth initialization failed. Configuration status:', {
+      isConfigured: isFirebaseConfigured(),
+      hasApiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      hasAuthDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      hasProjectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
+    throw new Error('Firebase Auth is not configured. Please check environment variables.');
   }
   return auth;
 };
