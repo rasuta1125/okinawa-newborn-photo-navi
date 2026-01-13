@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-    const baseUrl = 'https://okinawa-newborn-navi.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://okinawa-newborn-photo-navi.vercel.app';
 
     return {
         rules: [
