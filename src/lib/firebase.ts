@@ -16,6 +16,15 @@ const firebaseConfig = {
 
 // Check if Firebase is configured
 const isFirebaseConfigured = () => {
+  // Debug: Log environment variables (only first few characters for security)
+  if (typeof window !== 'undefined') {
+    console.log('🔍 Environment variables check:', {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? `${process.env.NEXT_PUBLIC_FIREBASE_API_KEY.substring(0, 10)}...` : 'MISSING',
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'MISSING',
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'MISSING',
+    });
+  }
+
   return !!(
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
