@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   authors: [{ name: "沖縄ニューボーンフォト・ナビ" }],
   creator: "沖縄ニューボーンフォト・ナビ",
   publisher: "沖縄ニューボーンフォト・ナビ",
+  verification: {
+    google: "Zcp9NWs5QJ248tUqn8bIWeLMMl8Xs2-h5plfCnjnF1E",
+  },
   formatDetection: {
     email: false,
     address: false,
