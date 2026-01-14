@@ -44,6 +44,10 @@ export interface Photographer {
   website?: string;
   snsLinks?: SnsLinks; // ランク制限あり
 
+  // 料金情報
+  priceRange?: string; // 例: "¥30,000〜¥50,000"
+  priceNote?: string; // 料金に関する補足説明
+
   // 承認・公開管理
   approvalStatus: ApprovalStatus;
   isPublished: boolean;

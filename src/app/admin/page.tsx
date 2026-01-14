@@ -462,6 +462,37 @@ export default function AdminPage() {
                                     </div>
                                 </div>
 
+                                {/* 料金情報 */}
+                                <div className="border-b border-gray-200 pb-6">
+                                    <h3 className="text-lg font-medium text-gray-900 mb-4">料金情報</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                金額目安
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="例: ¥30,000〜¥50,000"
+                                                value={formData.priceRange || ''}
+                                                onChange={(e) => setFormData({ ...formData, priceRange: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                料金に関する補足
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="例: 衣装レンタル込み、出張費別途"
+                                                value={formData.priceNote || ''}
+                                                onChange={(e) => setFormData({ ...formData, priceNote: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* 画像アップロード */}
                                 <div className="border-b border-gray-200 pb-6">
                                     <h3 className="text-lg font-medium text-gray-900 mb-4">画像</h3>
@@ -619,7 +650,7 @@ export default function AdminPage() {
                                                 対応エリア（複数選択可）
                                             </label>
                                             <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
-                                                {allAreas.slice(0, 10).map(area => (
+                                                {allAreas.map(area => (
                                                     <label key={area} className="flex items-center gap-2 cursor-pointer">
                                                         <input
                                                             type="checkbox"
