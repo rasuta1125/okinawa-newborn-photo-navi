@@ -13,6 +13,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.7,
     }));
 
+    // Area pages
+    const areas = ['naha', 'urasoe', 'ginowan'];
+    const areaUrls = areas.map((area) => ({
+        url: `${baseUrl}/area/${area}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+    }));
+
     return [
         {
             url: baseUrl,
@@ -56,6 +65,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'monthly',
             priority: 0.5,
         },
+        ...areaUrls,
         ...blogUrls,
     ];
 }

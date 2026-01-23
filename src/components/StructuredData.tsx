@@ -6,6 +6,7 @@ interface StructuredDataProps {
 }
 
 export function StructuredData({ type, data }: StructuredDataProps) {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://okinawa-newborn-photo-navi.vercel.app';
     let structuredData = {};
 
     switch (type) {
@@ -14,13 +15,13 @@ export function StructuredData({ type, data }: StructuredDataProps) {
                 '@context': 'https://schema.org',
                 '@type': 'WebSite',
                 name: '沖縄ニューボーンフォト・ナビ',
-                url: 'https://okinawa-newborn-navi.com',
+                url: baseUrl,
                 description: '沖縄県内の信頼できるニューボーンフォト・新生児写真の専門家を見つけられるマッチングサイト',
                 potentialAction: {
                     '@type': 'SearchAction',
                     target: {
                         '@type': 'EntryPoint',
-                        urlTemplate: 'https://okinawa-newborn-navi.com/search?q={search_term_string}',
+                        urlTemplate: `${baseUrl}/search?q={search_term_string}`,
                     },
                     'query-input': 'required name=search_term_string',
                 },
@@ -32,8 +33,8 @@ export function StructuredData({ type, data }: StructuredDataProps) {
                 '@context': 'https://schema.org',
                 '@type': 'Organization',
                 name: '沖縄ニューボーンフォト・ナビ',
-                url: 'https://okinawa-newborn-navi.com',
-                logo: 'https://okinawa-newborn-navi.com/images/logo.png',
+                url: baseUrl,
+                logo: `${baseUrl}/images/logo.png`,
                 description: '沖縄県内のニューボーンフォト専門家のマッチングポータル',
                 address: {
                     '@type': 'PostalAddress',
@@ -73,9 +74,9 @@ export function StructuredData({ type, data }: StructuredDataProps) {
             structuredData = {
                 '@context': 'https://schema.org',
                 '@type': 'LocalBusiness',
-                '@id': 'https://okinawa-newborn-navi.com',
+                '@id': baseUrl,
                 name: '沖縄ニューボーンフォト・ナビ',
-                image: 'https://okinawa-newborn-navi.com/images/og-default.jpg',
+                image: `${baseUrl}/images/og-default.jpg`,
                 description: '沖縄県内のニューボーンフォト専門家のマッチングポータル',
                 address: {
                     '@type': 'PostalAddress',
@@ -87,7 +88,7 @@ export function StructuredData({ type, data }: StructuredDataProps) {
                     latitude: 26.2124,
                     longitude: 127.6809,
                 },
-                url: 'https://okinawa-newborn-navi.com',
+                url: baseUrl,
                 telephone: '',
                 openingHoursSpecification: {
                     '@type': 'OpeningHoursSpecification',
