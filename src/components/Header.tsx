@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 export function Header() {
@@ -11,8 +12,15 @@ export function Header() {
             <nav className="container-custom">
                 <div className="flex items-center justify-between h-16 md:h-20">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <span className="text-xl md:text-2xl font-bold text-[var(--primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <Image
+                            src="/images/logo.png"
+                            alt="沖縄ニューボーンフォト・ナビ"
+                            width={50}
+                            height={50}
+                            className="w-10 h-10 md:w-12 md:h-12"
+                        />
+                        <span className="text-lg md:text-xl font-bold text-[var(--primary)] hidden sm:block" style={{ fontFamily: 'var(--font-heading)' }}>
                             沖縄ニューボーンフォト・ナビ
                         </span>
                     </Link>
