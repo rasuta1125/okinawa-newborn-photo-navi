@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://okinawa-newborn-navi.com/sitemap.xml
+Sitemap: https://okinawa-newborn-photo-navi.vercel.app/sitemap.xml
 
 # Disallow admin pages
 User-agent: *

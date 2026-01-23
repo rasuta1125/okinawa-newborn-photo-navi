@@ -28,6 +28,12 @@ export function Header() {
                         <Link href="/100days" className="text-[var(--primary)] hover:text-[var(--photorait-orange)] transition-colors text-sm font-medium">
                             100日以降のおすすめスタジオ
                         </Link>
+                        <Link href="/blog" className="text-[var(--primary)] hover:text-[var(--photorait-orange)] transition-colors text-sm font-medium">
+                            ブログ
+                        </Link>
+                        <Link href="/faq" className="text-[var(--primary)] hover:text-[var(--photorait-orange)] transition-colors text-sm font-medium">
+                            FAQ
+                        </Link>
                         <Link href="/register" className="px-4 py-2 bg-gradient-to-r from-[#FF9500] to-[#E68600] text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold">
                             掲載したい方はこちら
                         </Link>
@@ -78,6 +84,20 @@ export function Header() {
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 100日以降のおすすめスタジオ
+                            </Link>
+                            <Link
+                                href="/blog"
+                                className="text-[var(--primary)] hover:text-[var(--photorait-orange)] transition-colors py-2"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                ブログ
+                            </Link>
+                            <Link
+                                href="/faq"
+                                className="text-[var(--primary)] hover:text-[var(--photorait-orange)] transition-colors py-2"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                FAQ
                             </Link>
                             <Link
                                 href="/register"
